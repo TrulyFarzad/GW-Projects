@@ -3,19 +3,18 @@ this script creates desired tables in the database. to be run after the mysql_da
 and only once, upon running the program on a server for the first time.
 """
 
-from info import mysql_connection_info
+from info import USER, HOST, MYSQL_PASSWORD, PORT, DATABASE
 import mysql.connector
 
 
 if __name__ == '__main__':
     db = mysql.connector.connect(
-        host=mysql_connection_info.HOST,
-        user=mysql_connection_info.USER,
-        password=mysql_connection_info.PASSWORD,
-        port=mysql_connection_info.PORT,
-        database=mysql_connection_info.DATABASE
+        host=HOST,
+        user=USER,
+        password=MYSQL_PASSWORD,
+        port=PORT,
+        database=DATABASE
     )
-
     cursor = db.cursor()
 
     cursor.execute(

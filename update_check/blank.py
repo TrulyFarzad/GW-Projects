@@ -1,21 +1,39 @@
-from bs4 import BeautifulSoup
 import requests
 
 
-# # url = 'https://5.182.44.209:4041/admin/plugins/custombuild?tab=update-software'
-# url = 'http://libgen.rs/search.php?req=art+of+war&lg_topic=libgen&open=0&view=simple&res=25&phrase=1&column=def'
+# with open('/home/farzad/Documents/lists.txt', 'r') as output:
+#     inputs = output.readlines()
+#     output.close()
 #
-# html_text = requests.get(url).text
+# for index, r in enumerate(inputs):
+#     if r == '\n':
+#         print(index, r'\n')
+#     else:
+#         print(index, r)
 #
-# soup = BeautifulSoup(html_text, 'lxml')
+# results = []
+# add = []
 #
-# updates = soup.find_all('tr', class_='table-row')
 #
-# packages = []
-#
-# for row in updates:
-#     packages.append(row.td.text)
+# while True:
+#     try:
+#         package = input()
+#         if package.split(' ')[0].lower() == 'latest':
+#             pckg = package.split(' ')
+#             add.append(pckg[3][0:-1].strip())
+#             add.append(pckg[-1].strip())
+#         elif package.split(' ')[0].lower() == 'installed':
+#             pckg = package.split(' ')
+#             add.append(pckg[-1].strip())
+#             print(f'add is: {add[1]}')
+#             results.append(add)
+#             add = []
+#         else:
+#             continue
+#     except:
+#         break
 
-a = [['hello world']]
+a = {'a': [1,2,3,4], 'n': 21313, 3: 's'}
+print(a[list(a.keys())[-1]])
 
-print('hell wor' in a[0][0])
+

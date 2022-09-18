@@ -1,46 +1,39 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
 from typing import List, Dict
-from update_check.Scripts.info import mysql_connection_info
+from Scripts.info import USER, HOST, MYSQL_PASSWORD, PORT, DATABASE
 import mysql.connector
 
 
-# connect to the MySQL server
-db = mysql.connector.connect(
-    host=mysql_connection_info.HOST,
-    user=mysql_connection_info.USER,
-    password=mysql_connection_info.PASSWORD,
-    port=mysql_connection_info.PORT,
-    database=mysql_connection_info.DATABASE
-)
-cursor = db.cursor()
-
-
 def search_for_query(keywords_dict: Dict) -> Dict:
-    single_results = {}
+    # search in the MySQL database for the given values from the get request.
+
+    # connect to the MySQL server
+    try:
+        db = mysql.connector.connect(
+            host=HOST,
+            user=USER,
+            password=MYSQL_PASSWORD,
+            port=PORT,
+            database=DATABASE
+        )
+    except Exception as error:
+        return {'results': f'failed to connect to MySQL server to search for requested update-check query. Error: {error}'}
+    cursor = db.cursor()
     for entry in keywords_dict:
         if keywords_dict[entry] is None:
             keywords_dict.pop(entry)
-        else:
-            single_results[entry] = []
-            for value in keywords_dict[entry]:
-                cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {entry} = '{value}' ORDER BY time DESC")
-                for result in cursor:
-                    single_results[entry].append(result)
-    length = len(single_results)
-    if length == 1:
-        return {'results': single_results[list(single_results.keys())[0]]}
+    get_req_len = len(keywords_dict)
+    if get_req_len == 1:
+        cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {list(keywords_dict.keys())[0]} IN {keywords_dict[list(keywords_dict.keys())[0]]} ORDER BY time DESC")
+    elif get_req_len == 2:
+        cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {list(keywords_dict.keys())[0]} IN {keywords_dict[list(keywords_dict.keys())[0]]} AND {list(keywords_dict.keys())[1]} IN {keywords_dict[list(keywords_dict.keys())[1]]} ORDER BY time DESC")
     else:
-        final_results = []
-        keys = list(single_results.keys())
-        key_len = len(keys)
-        for i in single_results[keys[0]]:
-            check_flag = []
-            for j in range(1, key_len):
-                check_flag.append(i in single_results[keys[j]])
-            if False not in check_flag:
-                final_results.append(i)
-        return {'results': final_results}
+        db.close()
+        return {'results': ['no search keys given']}
+    results = list(cursor)
+    db.close()
+    return {'results': results}
 
 
 app = Flask(__name__)

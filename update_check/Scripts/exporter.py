@@ -3,10 +3,13 @@ the purpose of this script is to receive the list of new update for Directadmin 
 has been made and return them in CSV and Email formats.
 """
 
+try:
+    from info import PATH
+except ModuleNotFoundError:
+    from Scripts.info import PATH
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pandas import DataFrame
-from info import csv_database
 from typing import Tuple, List
 import pandas as pd
 import smtplib
@@ -19,7 +22,8 @@ def to_dataframe(check_update_results: List) -> DataFrame:
             'package_list': check_update_results[0],
             'Time': check_update_results[1]
         }
-    result = pd.DataFrame(result_dict, index=[num for num in range(len(check_update_results[0]))])
+    # result = pd.DataFrame(result_dict, index=[num for num in range(len(check_update_results[0]))])
+    result = pd.DataFrame(result_dict)
     return result
 
 
@@ -29,7 +33,7 @@ def update_csv(check_ip_results: List) -> Tuple[DataFrame, str]:
     # when CSV database doesn't exist.
     new_data = to_dataframe(check_ip_results)
     try:
-        csv_db: DataFrame = pd.read_csv(csv_database.PATH)
+        csv_db: DataFrame = pd.read_csv(PATH)
         result = pd.concat([csv_db, new_data], ignore_index=True)
         return result, 'imported CSV database and updated it successfully!'
     except Exception as error:
@@ -38,7 +42,7 @@ def update_csv(check_ip_results: List) -> Tuple[DataFrame, str]:
 
 def save_csv(df: DataFrame) -> str:
     try:
-        df.to_csv(csv_database.PATH)
+        df.to_csv(rf'{PATH}/{df["ip"][0]}.csv')
         return 'saved the updated CSV file successfully!'
     except Exception as error:
         return f'Error in save_csv function: {error}'

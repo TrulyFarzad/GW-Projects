@@ -5,60 +5,55 @@ then check if the new update for each file contains any bug fixes or security fi
 and return the final results in a List format along with current time.
 """
 
-from scrap_rules import *
-from bs4 import BeautifulSoup
+try:
+    from scrape_rules import check_package
+except ModuleNotFoundError:
+    from Scripts.scrape_rules import check_package
 from datetime import datetime
 from typing import List
-import requests
 
 
-def concat_text(list_input: List) -> str:
-    # concat all the provider names resulted from check_ip operation into a ';' separated string.
-    if len(list_input) == 0:
-        return ''
-    result = ''
-    for text in list_input:
-        result += f'{text};'
-    result = result[0:-1]
-    return result
+def directadmin_check() -> List:
+    # get a list of new package updates from '/usr/local/directadmin/custombuild/build versions'
+    results = []
+    add = []
+
+    while True:
+        try:
+            package = input()
+            if package.split(' ')[0].lower() == 'latest':
+                pckg = package.split(' ')
+                add.append(pckg[3][0:-1].strip())
+                add.append(pckg[-1].strip())
+            elif package.split(' ')[0].lower() == 'installed':
+                pckg = package.split(' ')
+                add.append(pckg[-1].strip())
+                print(f'add is: {add[1]}')
+                results.append(add)
+                add = []
+            else:
+                continue
+        except:
+            break
+    return results
 
 
-def check_update(url: str = 'https://5.182.44.209:4041/admin/plugins/custombuild?tab=update-software') -> List:
-    # use the Directadmin page of Custom Build --> Update Software to get a list of new updates for packages.
-    time = str(datetime.now())
-    try:
-        html_text = requests.get(url).text  # scrap data from url
-        soup = BeautifulSoup(html_text, 'lxml')  # parse scrapped data
-        updates = soup.find_all('tr', class_='table-row')  # each row of the updates table
-        packages = []
-        for row in updates:
-            packages.append(row.td.text)  # extract each package's name from its update table's row
-        return [packages, [time for _ in range(len(packages))]]
-    except Exception as error:
-        return [[f'Error in check_update operation: {error}'], [time]]
-
-
-def crucial_updates(new_updates: List) -> List:
-    # get the result of the check_update operation and return a list of only those which contain crucial updates.
-    if 'Error in check_update operation:' in new_updates[0][0]:
-        return new_updates
-    check_results = {}
-    return_value = []
+def check_updates() -> List:
+    # check for updates with directadmin and return the check results of which ones contain crucial updates.
+    new_updates = directadmin_check()
+    results = []
     for package in new_updates:
-        if package == 'clamav':
-            check_results[package] = clamav()
-        elif package == 'php':
-            check_results[package]: php()
-        elif package == 'apache':
-            check_results[package]: apache()
-    for result in check_results:
-        if check_results[result] == 'y':
-            return_value.append(result)
-    return return_value
+        try:
+            package.append(str(datetime.now()))
+            package.append(check_package(package))
+        except Exception as error:
+            results.append([f'failed to check_updates for {package}: {error}', 0, 0, str(datetime.now()), 'error'])
+        finally:
+            return results
 
 
 if __name__ == '__main__':
     print('this is the updateCheck.py file.\nto run the program run the main.py file and make an API request to it.')
-    check = check_update()
+    check = check_updates()
     for i in check[0]:
         print(i)

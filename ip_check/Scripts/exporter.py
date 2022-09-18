@@ -3,11 +3,14 @@ this script's purpose is to receive the results of the spamCheck operation and s
 and email it to a specified email.
 """
 
+try:
+    from info import PATH
+except ModuleNotFoundError:
+    from Scripts.info import PATH
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pandas import DataFrame
-from info import csv_database
-from typing import Tuple, List
+from typing import List
 import pandas as pd
 import smtplib
 
@@ -21,35 +24,43 @@ def to_dataframe(check_ip_results: List) -> DataFrame:
             'BlackListed': check_ip_results[1],
             'TimeOut': check_ip_results[2],
         }
-    result = pd.DataFrame(result_dict, index=[0])
+    # result = pd.DataFrame(result_dict, index=[0])
+    result = pd.DataFrame(result_dict)
     return result
 
 
-def update_csv(check_ip_results: List) -> Tuple[DataFrame, str]:
-    # import the CSV database. concat it with new check_ip data and return the results.
-    # returns the check_ip dataframe itself if there is an error in the process. for first runs when CSV database
-    # doesn't exist.
-    new_data = to_dataframe(check_ip_results)
-    try:
-        csv_db: DataFrame = pd.read_csv(csv_database.PATH)
-        result = pd.concat([csv_db, new_data], ignore_index=True)
-        return result, 'imported CSV database and updated it successfully!'
-    except Exception as error:
-        return new_data, f'Error in update_csv function: {error}'
+# def update_csv(check_ip_results: List) -> Tuple[DataFrame, str]:
+#     print('update csv')
+#     # import the CSV database. concat it with new check_ip data and return the results.
+#     # returns the check_ip dataframe itself if there is an error in the process. for first runs when CSV database
+#     # doesn't exist.
+#     new_data = to_dataframe(check_ip_results)
+#     try:
+#         csv_db: DataFrame = pd.read_csv(PATH)
+#         result = pd.concat([csv_db, new_data], ignore_index=True)
+#         print('done\n', result)
+#         return result, 'imported CSV database and updated it successfully!'
+#     except Exception as error:
+#         print('done with error\n')
+#         return new_data, f'Error in update_csv function: {error}'
 
 
 def save_csv(df: DataFrame) -> str:
+    print('save csv')
     try:
-        df.to_csv(csv_database.PATH)
+        df.to_csv(rf'{PATH}/{df["ip"][0]}.csv')
+        print('done\n')
         return 'saved the updated CSV file successfully!'
     except Exception as error:
+        print('done with error\n')
         return f'Error in save_csv function: {error}'
 
 
-def send_mail(df: DataFrame, sender: str, recipient: str, password: str) -> str:
+def send_mail(df: DataFrame, sender: str, recipient: str, password: str, subject: str) -> str:
+    print('send mail')
     try:
         message = MIMEMultipart()
-        message['Subject'] = 'new ip check query'
+        message['Subject'] = subject
         message['From'] = sender
         message['To'] = recipient
 

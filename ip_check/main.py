@@ -1,25 +1,28 @@
 from typing import Tuple, List, Dict
-from ip_check.Scripts.info import mail_credentials, mysql_connection_info
+from Scripts.info import HOST, USER, MYSQL_PASSWORD, PORT, DATABASE, SENDER, SENDER_PASSWORD, RECIPIENT
 from Scripts.spamCheck import check_ip
-from Scripts.exporter import update_csv, save_csv, send_mail
+from Scripts.exporter import to_dataframe, save_csv, send_mail
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
 import mysql.connector
 import pandas as pd
 
-# connect to the MySQL server
-db = mysql.connector.connect(
-    host=mysql_connection_info.HOST,
-    user=mysql_connection_info.USER,
-    password=mysql_connection_info.PASSWORD,
-    port=mysql_connection_info.PORT,
-    database=mysql_connection_info.DATABASE
-)
-cursor = db.cursor()
-
 
 def add_query(info_list: List) -> str:
     # adds new query of the ip_check operation's results to the MySQL database.
+
+    # connect to the MySQL server
+    try:
+        db = mysql.connector.connect(
+            host=HOST,
+            user=USER,
+            password=MYSQL_PASSWORD,
+            port=PORT,
+            database=DATABASE
+        )
+    except Exception as error:
+        return f'failed to connect to MySQL server to add ip-check query. Error: {error}'
+    cursor = db.cursor()
     ip = info_list[0]
     time = info_list[3]
     timeout = info_list[2]
@@ -28,36 +31,45 @@ def add_query(info_list: List) -> str:
         cursor.execute(
             f"INSERT INTO ip_check (ip, time, blacklisted, timeout) VALUES ({ip},{time},{blacklisted},{timeout})")
         db.commit()
+        db.close()
         return f'added MySQL query for {ip} successfully!'
     except Exception as error:
         return f'failed to add MySQL query for {ip} in ip_check table of nrst_project database. Error: {error}'
 
 
 def search_for_query(keywords_dict: Dict) -> Dict:
-    single_results = {}
+    # search in the MySQL database for the given values from the get request.
+
+    # connect to the MySQL server
+    try:
+        db = mysql.connector.connect(
+            host=HOST,
+            user=USER,
+            password=MYSQL_PASSWORD,
+            port=PORT,
+            database=DATABASE
+        )
+    except Exception as error:
+        return {'results': f'failed to connect to MySQL server to search for requested ip-check query. Error: {error}'}
+    cursor = db.cursor()
     for entry in keywords_dict:
         if keywords_dict[entry] is None:
             keywords_dict.pop(entry)
-        else:
-            single_results[entry] = []
-            for value in keywords_dict[entry]:
-                cursor.execute(f"SELECT * FROM ip_check WHERE {entry} = '{value}' ORDER BY time DESC")
-                for result in cursor:
-                    single_results[entry].append(result)
-    length = len(single_results)
-    if length == 1:
-        return {'results': single_results[list(single_results.keys())[0]]}
+    get_req_len = len(keywords_dict)
+    if get_req_len == 1:
+        cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {list(keywords_dict.keys())[0]} IN {keywords_dict[list(keywords_dict.keys())[0]]} ORDER BY time DESC")
+    elif get_req_len == 2:
+        cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {list(keywords_dict.keys())[0]} IN {keywords_dict[list(keywords_dict.keys())[0]]} AND {list(keywords_dict.keys())[1]} IN {keywords_dict[list(keywords_dict.keys())[1]]} ORDER BY time DESC")
+    elif get_req_len == 3:
+        cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {list(keywords_dict.keys())[0]} IN {keywords_dict[list(keywords_dict.keys())[0]]} AND {list(keywords_dict.keys())[1]} IN {keywords_dict[list(keywords_dict.keys())[1]]} AND {list(keywords_dict.keys())[2]} IN {keywords_dict[list(keywords_dict.keys())[2]]} ORDER BY time DESC")
+    elif get_req_len == 4:
+        cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {list(keywords_dict.keys())[0]} IN {keywords_dict[list(keywords_dict.keys())[0]]} AND {list(keywords_dict.keys())[1]} IN {keywords_dict[list(keywords_dict.keys())[1]]} AND {list(keywords_dict.keys())[2]} IN {keywords_dict[list(keywords_dict.keys())[2]]} AND {list(keywords_dict.keys())[3]} IN {keywords_dict[list(keywords_dict.keys())[3]]} ORDER BY time DESC")
     else:
-        final_results = []
-        keys = list(single_results.keys())
-        key_len = len(keys)
-        for i in single_results[keys[0]]:
-            check_flag = []
-            for j in range(1,key_len):
-                check_flag.append(i in single_results[keys[j]])
-            if False not in check_flag:
-                final_results.append(i)
-        return {'results': final_results}
+        db.close()
+        return {'results': ['no search keys given']}
+    results = list(cursor)
+    db.close()
+    return {'results': results}
 
 
 def check_and_export(ip) -> Tuple[List, Dict[str, str]]:
@@ -66,21 +78,25 @@ def check_and_export(ip) -> Tuple[List, Dict[str, str]]:
     logger = {}
     check_results = check_ip(ip)
     logger['ip'] = ip
-    df, log = update_csv(check_results)
-    logger['update_csv'] = log
+    # df, log = update_csv(check_results)
+    # logger['update_csv'] = log
+    df = to_dataframe(check_results)
     logger['save_csv'] = save_csv(df)
     logger['add_query'] = add_query(check_results)
     logger['send_mail'] = send_mail(df,
-                                    sender=mail_credentials.SENDER,
-                                    recipient=mail_credentials.RECIPIENT,
-                                    password=mail_credentials.PASSWORD)
+                                    sender=SENDER,
+                                    recipient=RECIPIENT,
+                                    password=SENDER_PASSWORD,
+                                    subject='new ip check query')
 
     # send the logger via email too.
     logs_df = pd.DataFrame(logger, index=[0])
+    logs_df.to_csv(r'path to save ip_check results')
     send_mail(logs_df,
-              sender=mail_credentials.SENDER,
-              recipient=mail_credentials.RECIPIENT,
-              password=mail_credentials.PASSWORD)
+              sender=SENDER,
+              recipient=RECIPIENT,
+              password=SENDER_PASSWORD,
+              subject='operation logs')
 
     return check_results, logger
 
@@ -119,4 +135,23 @@ class IpCheckReq(Resource):
 api.add_resource(IpCheckReq, '/')
 
 if __name__ == '__main__':
+    # ip_list = \
+    #     [
+    #         '157.90.205.145',
+    #         '151.80.93.33',
+    #         '138.201.79.233',
+    #         '148.251.200.145',
+    #         '147.135.173.17',
+    #         '5.9.220.53'
+    #     ]
+    #
+    # rslts = []
+    # check_logs = []
+    # for ip_to_check in ip_list:
+    #     cr, lgs = check_and_export(ip_to_check)
+    #     rslts.append(cr)
+    #     check_logs.append(lgs)
+    # print(rslts)
+    # print(check_logs)
+
     app.run()

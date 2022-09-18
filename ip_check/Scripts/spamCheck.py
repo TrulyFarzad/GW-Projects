@@ -4,9 +4,9 @@ blocked.
 then it returns the results and the current time in the list format.
 """
 
-import pydnsbl
 from datetime import datetime
 from pydnsbl.providers import BASE_PROVIDERS, Provider
+import pydnsbl
 
 
 def concat_text(list_input: list) -> str:
@@ -25,60 +25,65 @@ def check_ip(ip: str) -> list:
     # then merge the results for both types and return them in ';' separated strings with current time and ip values.
     anti_abuse_servers_list = \
         [
-            'cbl.abuseat.org',
-            'bl.spamcop.net',
-            'dnsbl.sorbs.net',
-            'b.barracudacentral.org',
             'dul.dnsbl.sorbs.net',
             'http.dnsbl.sorbs.net',
             'smtp.dnsbl.sorbs.net',
             'misc.dnsbl.sorbs.net',
-            'spam.dnsbl.sorbs.net',
             'socks.dnsbl.sorbs.net',
             'zombie.dnsbl.sorbs.net',
             'web.dnsbl.sorbs.net',
             'sbl.spamhaus.org',
             'pbl.spamhaus.org',
-            'zen.spamhaus.org',
             'xbl.spamhaus.org',
             'ubl.unsubscore.com',
-            'psbl.surriel.com',
-            'dyna.spamrats.com',
             'rbl.spamlab.com',
-            'spam.spamrats.com',
-            'noptr.spamrats.com',
             'cdl.anti-spam.org.cn',
             'cbl.anti-spam.org.cn',
-            'drone.abuse.ch',
             'dnsbl.inps.de',
-            'korea.services.net',
             'httpbl.abuse.ch',
-            'virus.rbl.jp',
             'short.rbl.jp',
-            'wormrbl.imp.ch',
-            'spamrbl.imp.ch',
             'rbl.suresupport.com',
-            'virbl.bit.nl',
             'spamguard.leadmon.net',
             'dsn.rfc-ignorant.org',
             'netblock.pedantic.org',
             'opm.tornevall.org',
-            'ix.dnsbl.manitu.net',
             'multi.surbl.org',
             'rbl.efnetrbl.org',
             'tor.dan.me.uk',
             'blackholes.mail-abuse.org',
             'relays.mail-abuse.org',
-            'dnsbl.dronebl.org',
             'rbl-plus.mail-abuse.org',
-            'db.wpbl.info',
             'access.redhawk.org',
             'query.senderbase.org',
-            'rbl.interserver.net',
             'csi.cloudmark.com',
-            'bogons.cymru.com',
             'truncate.gbudb.net'
         ]
+
+    # # the providers which are both in BASE_PROVIDERS & anti abuse list
+    # common_providers =\
+    #     [
+    #         'b.barracudacentral.org',
+    #         'bl.spamcop.net',
+    #         'bogons.cymru.com',
+    #         'cbl.abuseat.org',
+    #         'db.wpbl.info',
+    #         'dnsbl.dronebl.org',
+    #         'dnsbl.sorbs.net',
+    #         'drone.abuse.ch',
+    #         'dyna.spamrats.com',
+    #         'ix.dnsbl.manitu.net',
+    #         'korea.services.net',
+    #         'noptr.spamrats.com',
+    #         'psbl.surriel.com',
+    #         'rbl.interserver.net',
+    #         'spam.dnsbl.sorbs.net',
+    #         'spam.spamrats.com',
+    #         'spamrbl.imp.ch',
+    #         'virbl.bit.nl',
+    #         'virus.rbl.jp',
+    #         'wormrbl.imp.ch',
+    #         'zen.spamhaus.org'
+    #     ]
     providers_list = []
 
     try:
@@ -104,13 +109,16 @@ def check_ip(ip: str) -> list:
 
         failed_providers = failed_base_providers + ';' + failed_anti_abuse_providers
 
+        print([ip, blacklisted_providers, failed_providers, time])
+
         return [ip, blacklisted_providers, failed_providers, time]
     except Exception as error:
+        print([ip, str(error), 'ERROR!', str(datetime.now())])
         return [ip, str(error), 'ERROR!', str(datetime.now())]
 
 
 if __name__ == '__main__':
     print('this is the updateCheck.py file.\nto run the program run the main.py file and make an API request to it.')
-    check = check_ip('68.128.212.240')
+    check = check_ip('217.182.22.25')
     for i in check:
         print(i)
