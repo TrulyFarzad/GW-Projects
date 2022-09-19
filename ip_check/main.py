@@ -1,7 +1,7 @@
 from typing import Tuple, List, Dict
-from Scripts.info import HOST, USER, MYSQL_PASSWORD, PORT, DATABASE, SENDER, SENDER_PASSWORD, RECIPIENT
-from Scripts.spamCheck import check_ip
-from Scripts.exporter import to_dataframe, save_csv, send_mail
+from Libraries.info import HOST, USER, MYSQL_PASSWORD, PORT, DATABASE, SENDER, SENDER_PASSWORD, RECIPIENT
+from Libraries.spamCheck import check_ip
+from Libraries.exporter import to_dataframe, save_csv, send_mail
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
 import mysql.connector

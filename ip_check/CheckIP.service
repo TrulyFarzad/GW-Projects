@@ -1,0 +1,18 @@
+# the path is /etc/systemd/system/
+[Unit]
+Description=receives a list of IPs from a get request and checks if they are blacklisted as spammers.
+After=network.target
+#After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+#ExecStart=/usr/bin/python3 /home/root/Documents/Project/ip_check/main.py
+ExecStart=/home/farzad/anaconda3/bin/python /home/farzad/Documents/Project/ip_check/main.py
+#ExecStartPost=/usr/bin/python3 /home/root/Documents/Project/update_check/startLog.py
+ExecStartPost=/home/farzad/anaconda3/bin/python /home/farzad/work/Greenweb/Project/ip_check/startLog.py
+#ExecStopPost=/usr/bin/python3 /home/root/Documents/Project/update_check/stopLog.py
+ExecStopPost=/home/farzad/anaconda3/bin/python /home/farzad/work/Greenweb/Project/ip_check/stopLog.py
+
+[Install]
+WantedBy=multi-user.target

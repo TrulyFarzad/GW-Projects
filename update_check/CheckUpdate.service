@@ -1,0 +1,17 @@
+# the path is /etc/systemd/system/
+[Unit]
+Description=API to search in the MySQL database for the queried results of the update_check operation with a get request.
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+#ExecStart=/usr/bin/python3 /home/root/Documents/Project/update_check/get_update_check_data.py
+ExecStart=/home/farzad/anaconda3/bin/python /home/farzad/work/Greenweb/Project/update_check/get_update_check_data.py
+#ExecStartPost=/usr/bin/python3 /home/root/Documents/Project/update_check/startLog.py
+ExecStartPost=/home/farzad/anaconda3/bin/python /home/farzad/work/Greenweb/Project/update_check/startLog.py
+#ExecStopPost=/usr/bin/python3 /home/root/Documents/Project/update_check/stopLog.py
+ExecStopPost=/home/farzad/anaconda3/bin/python /home/farzad/work/Greenweb/Project/update_check/stopLog.py
+
+[Install]
+WantedBy=multi-user.target

@@ -174,6 +174,3 @@ def check_package(package_name: str) -> str:
             return check_keyword(text)
     else:
         return 'link_unknown'
-
-
-check_package('curl')

@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
 from typing import List, Dict
-from Scripts.info import USER, HOST, MYSQL_PASSWORD, PORT, DATABASE
+from Libraries.info import USER, HOST, MYSQL_PASSWORD, PORT, DATABASE
 import mysql.connector
 
 

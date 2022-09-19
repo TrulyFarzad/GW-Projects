@@ -1,7 +1,7 @@
 from typing import Tuple, List, Dict
-from Scripts.info import USER, HOST, MYSQL_PASSWORD, PORT, DATABASE, SENDER, SENDER_PASSWORD, RECIPIENT
-from Scripts.updateCheck import check_updates
-from Scripts.exporter import to_dataframe, save_csv, send_mail
+from Libraries.info import USER, HOST, MYSQL_PASSWORD, PORT, DATABASE, SENDER, SENDER_PASSWORD, RECIPIENT
+from Libraries.updateCheck import check_updates
+from Libraries.exporter import to_dataframe, save_csv, send_mail
 import mysql.connector
 import pandas as pd
 

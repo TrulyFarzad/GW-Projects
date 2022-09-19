@@ -1,5 +1,5 @@
-import requests
-
+# import requests
+import time
 
 # with open('/home/farzad/Documents/lists.txt', 'r') as output:
 #     inputs = output.readlines()
@@ -33,7 +33,8 @@ import requests
 #     except:
 #         break
 
-a = {'a': [1,2,3,4], 'n': 21313, 3: 's'}
-print(a[list(a.keys())[-1]])
-
-
+while True:
+    with open('/home/farzad/Documents/unit.txt', 'w') as f:
+        f.write(f'ctime is: {time.ctime()}\n')
+        f.close()
+    time.sleep(10)

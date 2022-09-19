@@ -52,8 +52,8 @@ def check_updates() -> List:
             return results
 
 
-if __name__ == '__main__':
-    print('this is the updateCheck.py file.\nto run the program run the main.py file and make an API request to it.')
-    check = check_updates()
-    for i in check[0]:
-        print(i)
+# if __name__ == '__main__':
+#     print('this is the updateCheck.py file.\nto run the program run the main.py file and make an API request to it.')
+#     check = check_updates()
+#     for i in check[0]:
+#         print(i)

@@ -117,8 +117,8 @@ def check_ip(ip: str) -> list:
         return [ip, str(error), 'ERROR!', str(datetime.now())]
 
 
-if __name__ == '__main__':
-    print('this is the updateCheck.py file.\nto run the program run the main.py file and make an API request to it.')
-    check = check_ip('217.182.22.25')
-    for i in check:
-        print(i)
+# if __name__ == '__main__':
+#     print('this is the updateCheck.py file.\nto run the program run the main.py file and make an API request to it.')
+#     check = check_ip('217.182.22.25')
+#     for i in check:
+#         print(i)
