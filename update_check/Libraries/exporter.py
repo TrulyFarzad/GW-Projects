@@ -19,8 +19,11 @@ def to_dataframe(check_update_results: List) -> DataFrame:
     # turn the result of the check_update operation into a dataframe
     result_dict =\
         {
-            'package_list': check_update_results[0],
-            'Time': check_update_results[1]
+            'package': check_update_results[0],
+            'new': check_update_results[1],
+            'old': check_update_results[2],
+            'Time': check_update_results[3],
+            'update': check_update_results[4]
         }
     # result = pd.DataFrame(result_dict, index=[num for num in range(len(check_update_results[0]))])
     result = pd.DataFrame(result_dict)

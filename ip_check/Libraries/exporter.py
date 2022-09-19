@@ -6,7 +6,7 @@ and email it to a specified email.
 try:
     from info import PATH
 except ModuleNotFoundError:
-    from Scripts.info import PATH
+    from Libraries.info import PATH
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pandas import DataFrame

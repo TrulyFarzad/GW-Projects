@@ -1,6 +1,6 @@
 from typing import Tuple, List, Dict
 from Libraries.info import HOST, USER, MYSQL_PASSWORD, PORT, DATABASE, SENDER, SENDER_PASSWORD, RECIPIENT
-from Libraries.spamCheck import check_ip
+from Libraries.spamCheck import check_ip, concat_text
 from Libraries.exporter import to_dataframe, save_csv, send_mail
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
@@ -39,7 +39,7 @@ def add_query(info_list: List) -> str:
 
 def search_for_query(keywords_dict: Dict) -> Dict:
     # search in the MySQL database for the given values from the get request.
-
+    results_dict = {'ip': [], 'blacklisted': [], 'timeout': [], 'time': []}
     # connect to the MySQL server
     try:
         db = mysql.connector.connect(
@@ -52,9 +52,6 @@ def search_for_query(keywords_dict: Dict) -> Dict:
     except Exception as error:
         return {'results': f'failed to connect to MySQL server to search for requested ip-check query. Error: {error}'}
     cursor = db.cursor()
-    for entry in keywords_dict:
-        if keywords_dict[entry] is None:
-            keywords_dict.pop(entry)
     get_req_len = len(keywords_dict)
     if get_req_len == 1:
         cursor.execute(f"SELECT * FROM directadmin_update_check WHERE {list(keywords_dict.keys())[0]} IN {keywords_dict[list(keywords_dict.keys())[0]]} ORDER BY time DESC")
@@ -69,7 +66,14 @@ def search_for_query(keywords_dict: Dict) -> Dict:
         return {'results': ['no search keys given']}
     results = list(cursor)
     db.close()
-    return {'results': results}
+    for r in results:
+        results_dict['ip'].append(r[0])
+        results_dict['blacklisted'].append(r[1])
+        results_dict['timeout'].append(r[2])
+        results_dict['time'].append(r[3])
+    for column in results_dict:
+        results_dict[column] = concat_text(column)
+    return results_dict
 
 
 def check_and_export(ip) -> Tuple[List, Dict[str, str]]:
@@ -105,31 +109,41 @@ app = Flask(__name__)
 api = Api(app)
 
 ip_check_put = reqparse.RequestParser()
-ip_check_put.add_argument('ip', type=List, help='insert all the ips you want to be checked.', required=True)
+ip_check_put.add_argument('ip', type=str, help='insert all the ips you want to be checked as a ; separated string.', required=True)
 
 database_query_get = reqparse.RequestParser()
-database_query_get.add_argument('ip', type=List, help='insert list of ips you want to search for')
-database_query_get.add_argument('blacklisted', type=List, help='insert list of listed providers you want to search for')
-database_query_get.add_argument('timeout', type=List, help='insert list of timeout providers you want to search for')
-database_query_get.add_argument('time', type=List, help='search for ip_check results by time')
+database_query_get.add_argument('ip', type=str, help='insert a ; separated string of ips you want to search for')
+database_query_get.add_argument('blacklisted', type=str, help='insert ; separated string of listed providers you want to search for')
+database_query_get.add_argument('timeout', type=str, help='insert ; separated string of timeout providers you want to search for')
+database_query_get.add_argument('time', type=str, help='search for times of ip_check operations by ; separated string')
 
 
 class IpCheckReq(Resource):
     def get(self):
         search_keys = database_query_get.parse_args()
-        database_search_results = search_for_query(search_keys)
+        search_keys_cleaned = dict(search_keys)
+        for entry in search_keys:
+            if search_keys[entry] is None:
+                search_keys_cleaned.pop(entry)
+                continue
+            search_keys_cleaned[entry] = search_keys_cleaned[entry].split(';')
+        database_search_results = search_for_query(search_keys_cleaned)
         return database_search_results
 
     def put(self):
         req_ips = ip_check_put.parse_args()
-        req_ips = req_ips['ip']
-        results = []
-        logs = []
-        for ip in req_ips:
-            cr, log = check_and_export(ip)
-            results.append(cr)
-            logs.append(log)
-        return {'Results': results, 'Logs': logs}
+        try:
+            req_ips = req_ips['ip'].split(';')
+            results = []
+            logs = []
+            for ip in req_ips:
+                cr, log = check_and_export(ip)
+                results.append(cr)
+                logs.append(log)
+            return {'Results': results, 'Logs': logs}, 200
+        except:
+            print('None')
+            return {'results': req_ips}, 400
 
 
 api.add_resource(IpCheckReq, '/')
